@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NIC Voice Agent</title>
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --panel: #ffffff;
+        --panel-2: #f9fafb;
+        --border: rgba(0, 0, 0, 0.08);
+        --text: #151515;
+        --muted: #6b7280;
+        --accent: #15803d;
+        --accent-2: #22c55e;
+        --accent-3: #16a34a;
+        --shadow: rgba(0, 0, 0, 0.15);
+        --danger: #b42318;
+        --ok: #107c41;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #ffffff, #eef5f1 70%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .launcher {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        border: none;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        padding: 0;
+        box-shadow: 0 18px 30px rgba(21, 128, 61, 0.28);
+        cursor: pointer;
+        z-index: 30;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .launcher.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.9);
+      }
+      .launcher img {
+        width: 70%;
+        height: 70%;
+        object-fit: contain;
+      }
+
+      .widget-wrap {
+        position: fixed;
+        right: 22px;
+        bottom: 0;
+        width: min(320px, 90vw);
+        z-index: 25;
+        transform: translateY(18px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+      }
+
+      .widget-wrap.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .widget {
+        background: var(--panel);
+        border-radius: 22px;
+        box-shadow: 0 28px 60px var(--shadow);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 100vh;
+      }
+
+      .widget-header {
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #ecfdf3, #f8fffb);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid var(--border);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 0.98rem;
+      }
+
+      .brand p {
+        margin: 2px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .close {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .widget-body {
+        padding: 12px 14px 14px;
+        background: var(--panel);
+        overflow-y: auto;
+      }
+      .panel {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .panel h2 {
+        margin: 0 0 6px;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        color: var(--muted);
+      }
+
+      .panel p {
+        margin: 0;
+        font-size: 0.94rem;
+        line-height: 1.45;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .panel-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #fff;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .panel-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .call-row {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      select,
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 0.95rem;
+      }
+
+      .call-btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 12px 22px rgba(22, 163, 74, 0.25);
+      }
+
+      .fine {
+        margin: 8px 0 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .footer {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .branding {
+        margin-top: 8px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .branding-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, #ecfdf3, #f8fffb);
+        color: #166534;
+        font-size: 0.76rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .ghost {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+
+      .status {
+        margin-top: 8px;
+        min-height: 18px;
+        font-size: 0.85rem;
+      }
+
+      .status.error { color: var(--danger); }
+      .status.ok { color: var(--ok); }
+
+      @media (max-width: 480px) {
+        .widget-wrap {
+          right: 12px;
+          bottom: 0;
+          width: min(320px, calc(100vw - 24px));
+        }
+
+        .widget {
+          max-height: 100vh;
+        }
+
+        .launcher {
+          right: 12px;
+          bottom: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="launcher" id="launcher" type="button" aria-label="Open NIC voice agent">
+      <img src="{{ url_for('static', filename='nic-logo.png') }}" alt="NIC logo" />
+    </button>
+
+    <div class="widget-wrap" id="widgetWrap" aria-hidden="true">
+      <div class="widget" role="dialog" aria-modal="true">
+        <div class="widget-header">
+          <div class="brand">
+            <div class="logo">
+              <img src="{{ url_for('static', filename='nic-logo.png') }}" alt="NIC logo" />
+            </div>
+            <div>
+              <h1>NIC Voice Agent</h1>
+              <p>Instant call demo</p>
+            </div>
+          </div>
+          <button class="close" id="closeBtn" type="button">Close</button>
+        </div>
+
+        <div class="widget-body">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>AGENT PREVIEW</h2>
+              <div class="panel-logo">
+                <img src="{{ url_for('static', filename='nic-logo.png') }}" alt="NIC logo" />
+              </div>
+            </div>
+            <p>Get quick help with NIC queries and support assistance</p>
+          </div>
+
+          <div class="panel">
+            <h2>REQUEST A CALL</h2>
+            <div class="call-row">
+              <select id="country">
+                <option value="+92">PK +92</option>
+              </select>
+              <input id="phone" type="tel" placeholder="Your phone number" autocomplete="tel" />
+            </div>
+            <button class="call-btn" id="callBtn" type="button">Call me now</button>
+            <p class="fine">We will call you within seconds. Standard carrier rates may apply.</p>
+            <div class="status" id="status"></div>
+          </div>
+
+          <div class="footer">
+            <button class="ghost" id="cancelBtn" type="button">Close</button>
+          </div>
+
+          <div class="branding">
+            <span class="branding-tag">Design by ALGONLP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const widgetWrap = document.getElementById("widgetWrap");
+      const launcher = document.getElementById("launcher");
+      const closeBtn = document.getElementById("closeBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const callBtn = document.getElementById("callBtn");
+      const phone = document.getElementById("phone");
+      const country = document.getElementById("country");
+      const statusEl = document.getElementById("status");
+
+      function setStatus(text, ok = true) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + (ok ? "ok" : "error");
+      }
+
+      function clearStatus() {
+        statusEl.textContent = "";
+        statusEl.className = "status";
+      }
+
+      function isE164(value) {
+        return /^\+[1-9]\d{7,14}$/.test(value);
+      }
+
+      function normalizePhoneInput(value) {
+        return (value || "").replace(/\D/g, "");
+      }
+
+      function openWidget() {
+        widgetWrap.classList.add("open");
+        widgetWrap.setAttribute("aria-hidden", "false");
+        launcher.classList.add("hidden");
+        clearStatus();
+        phone.focus();
+      }
+
+      function closeWidget() {
+        widgetWrap.classList.remove("open");
+        widgetWrap.setAttribute("aria-hidden", "true");
+        launcher.classList.remove("hidden");
+        phone.value = "";
+        clearStatus();
+      }
+
+      async function placeCall() {
+        const rawNumber = phone.value.trim();
+        const normalizedNumber = normalizePhoneInput(rawNumber);
+        const fullNumber = `${country.value}${normalizedNumber}`;
+        const originalText = callBtn.innerHTML;
+        let keepSuccessState = false;
+
+        if (!isE164(fullNumber)) {
+          setStatus("Enter a valid phone number", false);
+          return;
+        }
+
+        callBtn.disabled = true;
+        setStatus("Placing call...", true);
+
+        try {
+          const res = await fetch("/api/call", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              toNumber: normalizedNumber,
+              countryCode: country.value,
+            }),
+          });
+          let data = {};
+          try {
+            data = await res.json();
+          } catch (_) {
+            data = {};
+          }
+          if (!res.ok) {
+            const errMsg = data.error || `Call failed (HTTP ${res.status})`;
+            setStatus(errMsg, false);
+          } else {
+            setStatus("Call initiated successfully. The agent will call you shortly.", true);
+            callBtn.innerHTML = "<span>Call Sent!</span>";
+            keepSuccessState = true;
+            setTimeout(() => {
+              callBtn.innerHTML = originalText;
+              callBtn.disabled = false;
+            }, 3000);
+          }
+          console.log("Call Response:", data);
+        } catch (err) {
+          console.error("Error:", err);
+          const errMsg = "Network error while calling";
+          setStatus(errMsg, false);
+        } finally {
+          if (!keepSuccessState) {
+            callBtn.innerHTML = originalText;
+            callBtn.disabled = false;
+          }
+        }
+      }
+
+      launcher.addEventListener("click", openWidget);
+      closeBtn.addEventListener("click", closeWidget);
+      cancelBtn.addEventListener("click", closeWidget);
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeWidget();
+      });
+      phone.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") placeCall();
+      });
+      callBtn.addEventListener("click", placeCall);
+    </script>
+  </body>
+</html>
+
+
+
+
