@@ -24,11 +24,6 @@ ELEVENLABS_ENDPOINT = os.getenv(
     "ELEVENLABS_ENDPOINT",
     "https://api.elevenlabs.io/v1/convai/twilio/outbound-call",
 )
-ALLOWED_ORIGINS = {
-    origin.strip().rstrip("/")
-    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
-    if origin.strip()
-}
 RATE_LIMIT_WINDOW_SEC = max(1, int(os.getenv("CALL_RATE_LIMIT_WINDOW_SEC", "300")))
 RATE_LIMIT_MAX_REQUESTS = max(1, int(os.getenv("CALL_RATE_LIMIT_MAX_REQUESTS", "5")))
 UPSTREAM_CONNECT_TIMEOUT_SEC = max(1, int(os.getenv("UPSTREAM_CONNECT_TIMEOUT_SEC", "10")))
@@ -121,6 +116,24 @@ def get_request_origin() -> str:
     return ""
 
 
+def get_allowed_origins() -> set[str]:
+    allowed_origins = {
+        origin.strip().rstrip("/")
+        for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+        if origin.strip()
+    }
+
+    vercel_url = (os.getenv("VERCEL_URL") or "").strip()
+    if vercel_url:
+        allowed_origins.add(f"https://{vercel_url}".rstrip("/"))
+
+    production_url = (os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or "").strip()
+    if production_url:
+        allowed_origins.add(f"https://{production_url}".rstrip("/"))
+
+    return allowed_origins
+
+
 def get_client_ip() -> str:
     forwarded_for = (request.headers.get("X-Forwarded-For") or "").strip()
     if forwarded_for:
@@ -194,14 +207,12 @@ def create_call():
     endpoint = ELEVENLABS_ENDPOINT.strip()
     request_origin = get_request_origin()
     client_ip = get_client_ip()
+    allowed_origins = get_allowed_origins()
 
     if not isinstance(raw_number, str) or not isinstance(country_code, str):
         app.logger.warning("Rejected /api/call due to invalid phone payload types")
         return jsonify({"error": "Invalid phone number. Please enter a valid number."}), 400
-    if os.getenv("VERCEL_ENV") and not ALLOWED_ORIGINS:
-        app.logger.error("Rejected /api/call because ALLOWED_ORIGINS is not configured for Vercel")
-        return jsonify({"error": "Server origin allowlist is not configured."}), 503
-    if ALLOWED_ORIGINS and request_origin not in ALLOWED_ORIGINS:
+    if allowed_origins and request_origin not in allowed_origins:
         app.logger.warning(
             "Rejected /api/call due to disallowed origin origin=%s ip=%s",
             request_origin or "<missing>",
