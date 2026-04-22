@@ -35,6 +35,12 @@
         overflow: hidden;
       }
 
+      body.embed-only {
+        min-height: auto;
+        width: 84px;
+        height: 84px;
+      }
+
       .launcher {
         position: fixed;
         right: 22px;
@@ -65,6 +71,15 @@
         filter: drop-shadow(0 14px 24px rgba(21, 128, 61, 0.22));
       }
 
+      body.embed-only .launcher {
+        position: static;
+        right: auto;
+        bottom: auto;
+        width: 72px;
+        height: 72px;
+        margin: 6px;
+      }
+
       .widget-wrap {
         position: fixed;
         right: 22px;
@@ -84,6 +99,10 @@
         visibility: visible;
         pointer-events: auto;
         transition: transform 0.25s ease, opacity 0.25s ease;
+      }
+
+      body.embed-only .widget-wrap {
+        display: none;
       }
 
       .widget {
@@ -357,6 +376,11 @@
       const phone = document.getElementById("phone");
       const country = document.getElementById("country");
       const statusEl = document.getElementById("status");
+      const embedOnly = window.self !== window.top;
+
+      if (embedOnly) {
+        document.body.classList.add("embed-only");
+      }
 
       function setStatus(text, ok = true) {
         statusEl.textContent = text;
@@ -377,6 +401,10 @@
       }
 
       function openWidget() {
+        if (embedOnly) {
+          window.parent.postMessage({ type: "nic-agent-launcher-click" }, "*");
+          return;
+        }
         widgetWrap.classList.add("open");
         widgetWrap.setAttribute("aria-hidden", "false");
         launcher.classList.add("hidden");

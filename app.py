@@ -194,7 +194,12 @@ def handle_request_too_large(_exc):
 
 @app.post("/api/call")
 def create_call():
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if payload is None:
+        if (request.content_length or 0) > 0:
+            app.logger.warning("Rejected /api/call request with invalid JSON body")
+            return jsonify({"error": "Invalid request body. Expected a JSON object."}), 400
+        payload = {}
     if not isinstance(payload, dict):
         app.logger.warning("Rejected /api/call request with non-object JSON body")
         return jsonify({"error": "Invalid request body. Expected a JSON object."}), 400
