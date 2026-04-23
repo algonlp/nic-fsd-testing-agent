@@ -29,6 +29,7 @@
 
     Object.assign(iframe.style, {
       position: "fixed",
+      top: "auto",
       right: EDGE_GAP + "px",
       bottom: EDGE_GAP + "px",
       width: CLOSED_SIZE.width + "px",
@@ -59,8 +60,9 @@
       var size = sizeForState(state);
 
       iframe.dataset.state = state === "open" ? "open" : "closed";
+      iframe.style.top = "auto";
       iframe.style.right = gap + "px";
-      iframe.style.bottom = gap + "px";
+      iframe.style.bottom = iframe.dataset.state === "open" ? "0" : gap + "px";
       iframe.style.width = size.width + "px";
       iframe.style.height = size.height + "px";
     }

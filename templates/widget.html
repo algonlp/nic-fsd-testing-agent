@@ -72,12 +72,12 @@
       }
 
       body.embed-frame .launcher {
-        position: static;
-        right: auto;
-        bottom: auto;
+        position: fixed;
+        right: 6px;
+        bottom: 6px;
         width: 72px;
         height: 72px;
-        margin: 6px;
+        margin: 0;
       }
 
       .widget-wrap {
@@ -102,8 +102,10 @@
       }
 
       body.embed-frame .widget-wrap {
+        top: auto;
         right: 12px;
         bottom: 0;
+        left: auto;
         width: min(320px, calc(100vw - 24px));
       }
 
