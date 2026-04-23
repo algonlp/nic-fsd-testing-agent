@@ -27,9 +27,10 @@
     iframe.setAttribute("allowtransparency", "true");
     iframe.setAttribute("scrolling", "no");
 
-    Object.assign(iframe.style, {
+    var frameStyles = {
       position: "fixed",
       top: "auto",
+      left: "auto",
       right: EDGE_GAP + "px",
       bottom: EDGE_GAP + "px",
       width: CLOSED_SIZE.width + "px",
@@ -40,7 +41,11 @@
       display: "block",
       overflow: "hidden",
       zIndex: "2147483647",
-      transition: "width 180ms ease, height 180ms ease",
+      transition: "width 180ms ease, height 180ms ease, bottom 180ms ease",
+    };
+
+    Object.keys(frameStyles).forEach(function (property) {
+      iframe.style.setProperty(property, frameStyles[property], "important");
     });
 
     function sizeForState(state) {
@@ -60,11 +65,12 @@
       var size = sizeForState(state);
 
       iframe.dataset.state = state === "open" ? "open" : "closed";
-      iframe.style.top = "auto";
-      iframe.style.right = gap + "px";
-      iframe.style.bottom = iframe.dataset.state === "open" ? "0" : gap + "px";
-      iframe.style.width = size.width + "px";
-      iframe.style.height = size.height + "px";
+      iframe.style.setProperty("top", "auto", "important");
+      iframe.style.setProperty("left", "auto", "important");
+      iframe.style.setProperty("right", gap + "px", "important");
+      iframe.style.setProperty("bottom", iframe.dataset.state === "open" ? "0" : gap + "px", "important");
+      iframe.style.setProperty("width", size.width + "px", "important");
+      iframe.style.setProperty("height", size.height + "px", "important");
     }
 
     window.addEventListener("message", function (event) {

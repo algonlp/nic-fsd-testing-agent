@@ -72,9 +72,11 @@
       }
 
       body.embed-frame .launcher {
-        position: fixed;
-        right: 6px;
-        bottom: 6px;
+        position: fixed !important;
+        top: auto !important;
+        right: 6px !important;
+        bottom: 6px !important;
+        left: auto !important;
         width: 72px;
         height: 72px;
         margin: 0;
@@ -102,11 +104,16 @@
       }
 
       body.embed-frame .widget-wrap {
-        top: auto;
-        right: 12px;
-        bottom: 0;
-        left: auto;
+        position: fixed !important;
+        top: auto !important;
+        right: 12px !important;
+        bottom: 0 !important;
+        left: auto !important;
         width: min(320px, calc(100vw - 24px));
+      }
+
+      body.embed-frame .widget-wrap.open {
+        transform: none;
       }
 
       .widget {
