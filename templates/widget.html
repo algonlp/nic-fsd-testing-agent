@@ -103,7 +103,7 @@
 
       body.embed-frame .widget-wrap {
         right: 12px;
-        bottom: 12px;
+        bottom: 0;
         width: min(320px, calc(100vw - 24px));
       }
 
@@ -119,7 +119,20 @@
       }
 
       body.embed-frame .widget {
-        max-height: calc(100vh - 24px);
+        max-height: 100vh;
+      }
+
+      body.embed-frame .widget-header {
+        padding: 12px 14px;
+      }
+
+      body.embed-frame .widget-body {
+        padding: 10px 12px 12px;
+      }
+
+      body.embed-frame .panel {
+        padding: 10px;
+        margin-bottom: 8px;
       }
 
       .widget-header {
