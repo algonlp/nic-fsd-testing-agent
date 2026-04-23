@@ -6,7 +6,7 @@ from collections import defaultdict, deque
 from threading import Lock
 from time import time
 from urllib.parse import urlparse
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from dotenv import load_dotenv
 import requests
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -185,6 +185,11 @@ def summarize_for_log(data):
 @app.get("/")
 def index():
     return render_template("widget.html")
+
+
+@app.get("/embed.js")
+def embed_script():
+    return send_from_directory(BASE_DIR / "public", "embed.js", mimetype="application/javascript")
 
 
 @app.errorhandler(RequestEntityTooLarge)

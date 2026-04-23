@@ -35,10 +35,10 @@
         overflow: hidden;
       }
 
-      body.embed-only {
+      body.embed-frame {
         min-height: auto;
-        width: 84px;
-        height: 84px;
+        width: 100vw;
+        height: 100vh;
       }
 
       .launcher {
@@ -71,7 +71,7 @@
         filter: drop-shadow(0 14px 24px rgba(21, 128, 61, 0.22));
       }
 
-      body.embed-only .launcher {
+      body.embed-frame .launcher {
         position: static;
         right: auto;
         bottom: auto;
@@ -101,8 +101,10 @@
         transition: transform 0.25s ease, opacity 0.25s ease;
       }
 
-      body.embed-only .widget-wrap {
-        display: none;
+      body.embed-frame .widget-wrap {
+        right: 12px;
+        bottom: 12px;
+        width: min(320px, calc(100vw - 24px));
       }
 
       .widget {
@@ -114,6 +116,10 @@
         display: flex;
         flex-direction: column;
         max-height: 100vh;
+      }
+
+      body.embed-frame .widget {
+        max-height: calc(100vh - 24px);
       }
 
       .widget-header {
@@ -376,10 +382,18 @@
       const phone = document.getElementById("phone");
       const country = document.getElementById("country");
       const statusEl = document.getElementById("status");
-      const embedOnly = window.self !== window.top;
+      const embeddedFrame = window.self !== window.top;
 
-      if (embedOnly) {
-        document.body.classList.add("embed-only");
+      if (embeddedFrame) {
+        document.body.classList.add("embed-frame");
+      }
+
+      function postFrameState(state) {
+        if (!embeddedFrame) {
+          return;
+        }
+
+        window.parent.postMessage({ type: "nic-agent-frame-state", state }, "*");
       }
 
       function setStatus(text, ok = true) {
@@ -401,10 +415,7 @@
       }
 
       function openWidget() {
-        if (embedOnly) {
-          window.parent.postMessage({ type: "nic-agent-launcher-click" }, "*");
-          return;
-        }
+        postFrameState("open");
         widgetWrap.classList.add("open");
         widgetWrap.setAttribute("aria-hidden", "false");
         launcher.classList.add("hidden");
@@ -418,6 +429,7 @@
         launcher.classList.remove("hidden");
         phone.value = "";
         clearStatus();
+        postFrameState("closed");
       }
 
       async function placeCall() {
@@ -485,6 +497,12 @@
         if (e.key === "Enter") placeCall();
       });
       callBtn.addEventListener("click", placeCall);
+      window.addEventListener("message", (event) => {
+        if (!event.data) return;
+        if (event.data.type === "nic-agent-open") openWidget();
+        if (event.data.type === "nic-agent-close") closeWidget();
+      });
+      postFrameState("closed");
     </script>
   </body>
 </html>
