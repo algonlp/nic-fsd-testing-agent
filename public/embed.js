@@ -3,7 +3,7 @@
 
   var SCRIPT_ID = "nic-agent-embed-script";
   var FRAME_ID = "nic-agent-iframe";
-  var CLOSED_SIZE = { width: 84, height: 84 };
+  var CLOSED_SIZE = { width: 96, height: 96 };
   var OPEN_SIZE = { width: 344, height: 440 };
   var EDGE_GAP = 16;
   var loaderScript = document.currentScript || document.getElementById(SCRIPT_ID);
